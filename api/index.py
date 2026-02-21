@@ -93,4 +93,4 @@ async def get_latency_metrics(payload: dict = Body(...)):
 
 @app.get("/")
 async def root():
-    return {"status": "ok", "message": "FastAPI on Vercel is running."}
+    return {"status": "ok", "message": "FastAPI on Vercel is running v4."}
