@@ -8,11 +8,11 @@ from typing import List, Optional
 
 app = FastAPI()
 
-# Enable CORS for GET and POST requests from any origin
+# Enable CORS for all requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -58,11 +58,14 @@ async def get_latency_metrics(payload: dict = Body(...)):
         if not region_data:
             continue
             
-        latencies = [d["latency_ms"] for d in region_data]
+        latencies = sorted([d["latency_ms"] for d in region_data])
         uptimes = [d["uptime_pct"] for d in region_data]
         
         avg_latency = statistics.mean(latencies) if latencies else 0
+        
+        # Consistent p95 calculation using statistics.quantiles
         if len(latencies) >= 2:
+            # quantiles returns n-1 boundaries. For 95th percentile with n=100, we take index 94.
             p95_latency = statistics.quantiles(latencies, n=100)[94]
         elif latencies:
             p95_latency = latencies[0]
