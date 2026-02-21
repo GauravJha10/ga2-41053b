@@ -8,7 +8,26 @@ from typing import List, Optional
 
 app = FastAPI()
 
-# Enable CORS for all requests
+# Manual CORS Middleware to force headers
+@app.middleware("http")
+async def add_cors_header(request, call_next):
+    if request.method == "OPTIONS":
+        from fastapi.responses import Response
+        return Response(
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "*",
+                "Access-Control-Allow-Headers": "*",
+            }
+        )
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
+# Also keep CORSMiddleware as backup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
