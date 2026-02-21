@@ -3,38 +3,28 @@ import json
 import statistics
 import os
 from fastapi import FastAPI, Query, Body
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from typing import List, Optional
 
 app = FastAPI()
 
-# Manual CORS Middleware to force headers
+# Single robust CORS middleware
 @app.middleware("http")
 async def add_cors_header(request, call_next):
     if request.method == "OPTIONS":
-        from fastapi.responses import Response
         return Response(
             status_code=204,
             headers={
                 "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
                 "Access-Control-Allow-Headers": "*",
             }
         )
     response = await call_next(request)
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
-
-# Also keep CORSMiddleware as backup
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Base directory for data files (same as api/ on Vercel)
 DATA_DIR = os.path.dirname(__file__)
@@ -84,7 +74,6 @@ async def get_latency_metrics(payload: dict = Body(...)):
         
         # Consistent p95 calculation using statistics.quantiles
         if len(latencies) >= 2:
-            # quantiles returns n-1 boundaries. For 95th percentile with n=100, we take index 94.
             p95_latency = statistics.quantiles(latencies, n=100)[94]
         elif latencies:
             p95_latency = latencies[0]
@@ -100,7 +89,6 @@ async def get_latency_metrics(payload: dict = Body(...)):
             "avg_uptime": round(avg_uptime, 3),
             "breaches": breaches
         }
-        
     return results
 
 @app.get("/")
