@@ -1,12 +1,8 @@
 {
     "rewrites": [
         {
-            "source": "/api/students",
-            "destination": "/api/students.py"
-        },
-        {
-            "source": "/api/latency",
-            "destination": "/api/latency.py"
+            "source": "/api/(.*)",
+            "destination": "/api/index.py"
         }
     ]
 }
